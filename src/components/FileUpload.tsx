@@ -40,13 +40,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
   };
 
   const handleFile = (file: File) => {
-    // Only accept PDFs for now
-    if (file.type === "application/pdf" || file.type === "image/jpeg" || file.type === "image/png") {
-      onFileSelected(file);
-      toast.success(`File "${file.name}" uploaded successfully!`);
-    } else {
-      toast.error("Only PDF, JPEG, and PNG files are supported.");
-    }
+    // Accept all file types
+    onFileSelected(file);
+    toast.success(`Fichier "${file.name}" téléchargé avec succès !`);
   };
 
   const triggerFileInput = () => {
@@ -70,9 +66,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
             isDragging ? "text-brand-blue" : "text-gray-400"
           }`}
         />
-        <h3 className="text-lg font-medium mb-2">Upload your file</h3>
+        <h3 className="text-lg font-medium mb-2">Téléchargez votre fichier</h3>
         <p className="text-sm text-gray-500 mb-4 text-center">
-          Drag and drop your file here, or click to select a file
+          Glissez et déposez votre fichier ici, ou cliquez pour sélectionner un fichier
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
@@ -80,18 +76,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
             className="flex items-center gap-2 bg-brand-blue hover:bg-brand-darkBlue"
           >
             <FileUp className="h-4 w-4" />
-            Select File
+            Sélectionner un fichier
           </Button>
         </div>
         <input
           type="file"
           className="hidden"
-          accept=".pdf,.jpg,.jpeg,.png"
           ref={fileInputRef}
           onChange={handleFileChange}
         />
         <p className="text-xs text-gray-400 mt-4">
-          Supported files: PDF, JPEG, PNG
+          Tous types de fichiers acceptés
         </p>
       </div>
     </Card>
