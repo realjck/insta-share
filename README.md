@@ -12,7 +12,11 @@ Anyone visits the link → downloads file instantly
 
 Auto-deletes when host closes the page
 
-Run it
+![screenshot1](./media/screenshot1.png)
+
+![screenshot2](./media/screenshot2.png)
+
+Preview version:
 
 ```bash
 Copy
