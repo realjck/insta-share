@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { FilePdf } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface PdfPreviewProps {
   file: File | null;
@@ -32,7 +32,7 @@ const PdfPreview: React.FC<PdfPreviewProps> = ({ file }) => {
   return (
     <Card className="border border-gray-200 rounded-lg p-4 mb-6 bg-white shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <FilePdf className="text-red-500 w-5 h-5" />
+        <FileText className="text-red-500 w-5 h-5" />
         <h3 className="font-medium text-gray-900 truncate">{file.name}</h3>
         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">
           {(file.size / 1024).toFixed(1)} KB
