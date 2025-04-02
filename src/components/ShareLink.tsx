@@ -35,7 +35,7 @@ const ShareLink: React.FC<ShareLinkProps> = ({ shareUrl }) => {
   const shortCode = shareUrl.split('/').pop();
 
   return (
-    <Card className="p-6 border-0 rounded-lg mb-8 bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg transform hover:scale-[1.01] transition-all duration-300">
+    <Card className="p-6 border-0 rounded-lg mb-8 bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg hover:scale-[1.01] transition-all duration-300">
       <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
         <div className="flex items-center space-x-2 text-base font-semibold text-white w-full sm:w-auto">
           <Link className="h-5 w-5 text-blue-100" />
@@ -50,22 +50,23 @@ const ShareLink: React.FC<ShareLinkProps> = ({ shareUrl }) => {
           />
         </div>
         <Button
-          className={`flex items-center gap-2 px-6 py-6 h-auto w-full sm:w-auto text-base font-medium ${
+          className={`flex items-center gap-1 px-3 py-2 h-auto text-sm font-medium ${
             copied 
-              ? "bg-green-600 hover:bg-green-700 shadow-md" 
-              : "bg-white text-blue-700 hover:bg-blue-50 shadow-md"
-          } transition-all duration-300 animate-pulse-subtle`}
+              ? "bg-green-600 hover:bg-green-700 shadow-sm" 
+              : "bg-white text-blue-700 hover:bg-blue-50 shadow-sm"
+          } transition-colors`}
           onClick={copyToClipboard}
+          size="sm"
         >
           {copied ? (
             <>
-              <Check className="h-5 w-5" />
+              <Check className="h-4 w-4" />
               Copié!
             </>
           ) : (
             <>
-              <Copy className="h-5 w-5" />
-              Copier le lien
+              <Copy className="h-4 w-4" />
+              Copier
             </>
           )}
         </Button>
