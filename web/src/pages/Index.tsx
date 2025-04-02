@@ -79,10 +79,10 @@ const Index = () => {
         <div className="max-w-3xl mx-auto">
           <header className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Partage de Fichiers Simple
+            ⚡ Partage de Fichiers Instantané
             </h1>
             <p className="text-gray-600">
-              Téléchargez, prévisualisez et partagez des fichiers facilement
+              Téléchargez et partagez des fichiers facilement
             </p>
           </header>
 

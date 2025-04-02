@@ -53,13 +53,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file }) => {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      // Définir quels types de fichiers peuvent être prévisualisés
+      // Définir quels types de fichiers peuvent être prévisualisés (désactivé pour tout type)
+      /*
       const fileType = file.type.toLowerCase();
       setCanPreview(
         fileType === 'application/pdf' || 
         fileType.includes('image/')
       );
-      
+      */
+
       return () => {
         URL.revokeObjectURL(url);
       };
@@ -81,29 +83,6 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file }) => {
           {(file.size / 1024).toFixed(1)} KB
         </span>
       </div>
-      
-      {canPreview ? (
-        <div className="w-full rounded-lg overflow-hidden border border-gray-200">
-          {file.type === "application/pdf" ? (
-            <iframe
-              src={previewUrl}
-              title="PDF preview"
-              className="w-full h-[500px]"
-            />
-          ) : (
-            <img 
-              src={previewUrl} 
-              alt="File preview" 
-              className="max-h-[500px] mx-auto"
-            />
-          )}
-        </div>
-      ) : (
-        <div className="w-full rounded-lg border border-gray-200 p-8 bg-gray-50 flex flex-col items-center justify-center">
-          {getFileIcon()}
-          <p className="text-gray-500 mt-4">Aucune prévisualisation disponible pour ce type de fichier</p>
-        </div>
-      )}
     </Card>
   );
 };
