@@ -12,9 +12,7 @@ Anyone visits the link → downloads file instantly
 
 Auto-deletes when host closes the page
 
-![screenshot1](./media/screenshot1.png)
-
-![screenshot2](./media/screenshot2.png)
+![screenshots](./media/screenshots.png)
 
 Preview version:
 
