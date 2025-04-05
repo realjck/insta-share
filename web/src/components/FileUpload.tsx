@@ -73,7 +73,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
             onClick={triggerFileInput}
-            className="flex items-center gap-2 bg-brand-blue hover:bg-brand-darkBlue"
+            className="flex items-center gap-2"
+            variant="orange"
           >
             <FileUp className="h-4 w-4" />
             Sélectionner un fichier

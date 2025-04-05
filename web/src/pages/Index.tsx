@@ -82,7 +82,7 @@ const Index = () => {
             ⚡ Partage de Fichiers Instantané
             </h1>
             <p className="text-gray-600">
-              Téléchargez et partagez des fichiers facilement
+            Partagez vos fichiers en direct • Le lien n'est actif que lorsque cette page est ouverte
             </p>
           </header>
 
@@ -95,8 +95,7 @@ const Index = () => {
                   Votre fichier est prêt à être partagé
                 </h2>
                 <Button
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                  variant="orangeOutline"
                   onClick={clearPage}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
