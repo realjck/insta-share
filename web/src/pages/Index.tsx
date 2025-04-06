@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
 import ShareLink from "@/components/ShareLink";
@@ -8,68 +8,91 @@ import DownloadCounter from "@/components/DownloadCounter";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Fonction pour générer un code aléatoire de 4 caractères
-const generateShortCode = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 4; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [downloadCount, setDownloadCount] = useState(0);
+  const socketRef = useRef<WebSocket | null>(null);
+  const currentCodeRef = useRef<string | null>(null);
 
-  // Simulation d'augmentation du nombre de téléchargements
-  let downloadInterval: number | null = null;
-  
-  const startSimulatingDownloads = () => {
-    if (downloadInterval) {
-      clearInterval(downloadInterval);
+  // Cleanup function for WebSocket
+  const cleanupWebSocket = () => {
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
     }
+  };
+
+  // Handle WebSocket connection and file upload
+  const handleFileUpload = async (selectedFile: File) => {
+    cleanupWebSocket(); // Clean up any existing connection
     
-    downloadInterval = window.setInterval(() => {
-      setDownloadCount((prev) => prev + 1);
-    }, 5000 + Math.random() * 10000); // Intervalle aléatoire entre 5 et 15 secondes
+    socketRef.current = new WebSocket("ws://localhost:8765");
+    
+    socketRef.current.onopen = async () => {
+      try {
+        const data = await selectedFile.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(data)));
+        
+        socketRef.current?.send(JSON.stringify({
+          action: "upload",
+          name: selectedFile.name,
+          data: base64
+        }));
+      } catch (error) {
+        toast.error("Erreur lors du téléchargement du fichier");
+        cleanupWebSocket();
+      }
+    };
+
+    socketRef.current.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      
+      if (msg.type === "link") {
+        currentCodeRef.current = msg.code;
+        const url = `insta.pxly.fr/${msg.code}`;
+        setShareUrl(url);
+        
+        // Set up ping interval
+        const pingInterval = setInterval(() => {
+          if (socketRef.current?.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({ action: "ping" }));
+          }
+        }, 500);
+
+        // Store interval ID for cleanup
+        (socketRef.current as WebSocket & { pingInterval?: NodeJS.Timeout }).pingInterval = pingInterval;
+      }
+      
+      if (msg.type === "stats") {
+        setDownloadCount(msg.downloads);
+      }
+    };
+
+    socketRef.current.onerror = () => {
+      toast.error("Erreur de connexion au serveur");
+      cleanupWebSocket();
+    };
+
+    setFile(selectedFile);
   };
 
-  const stopSimulatingDownloads = () => {
-    if (downloadInterval) {
-      clearInterval(downloadInterval);
-      downloadInterval = null;
-    }
-  };
-
-  // Nettoyage à la destruction du composant
+  // Cleanup effect
   React.useEffect(() => {
     return () => {
-      stopSimulatingDownloads();
+      if ((socketRef.current as WebSocket & { pingInterval?: NodeJS.Timeout })?.pingInterval) {
+        clearInterval((socketRef.current as WebSocket & { pingInterval?: NodeJS.Timeout }).pingInterval);
+      }
+      cleanupWebSocket();
     };
   }, []);
 
-  // Générer instantanément un lien court lorsqu'un fichier est sélectionné
-  const handleFileSelected = (selectedFile: File) => {
-    setFile(selectedFile);
-    
-    // Générer immédiatement un lien court
-    const shortCode = generateShortCode();
-    const url = `insta.pxly.fr/${shortCode}`;
-    setShareUrl(url);
-    setDownloadCount(0);
-    
-    // Démarrer la simulation des téléchargements
-    startSimulatingDownloads();
-  };
-
-  // Effacer la page et réinitialiser
+  // Clear page and reset state
   const clearPage = () => {
     setFile(null);
     setShareUrl(null);
     setDownloadCount(0);
-    stopSimulatingDownloads();
+    cleanupWebSocket();
     toast.info("Page effacée avec succès !");
   };
 
@@ -79,15 +102,15 @@ const Index = () => {
         <div className="max-w-3xl mx-auto">
           <header className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ⚡ Partage de Fichiers Instantané
+              ⚡ Partage de Fichiers Instantané
             </h1>
             <p className="text-gray-600">
-            Partagez vos fichiers en direct • Le lien n'est actif que lorsque cette page est ouverte
+              Partagez vos fichiers en direct • Le lien n'est actif que lorsque cette page est ouverte
             </p>
           </header>
 
           {!file ? (
-            <FileUpload onFileSelected={handleFileSelected} />
+            <FileUpload onFileSelected={handleFileUpload} />
           ) : (
             <>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
@@ -104,9 +127,7 @@ const Index = () => {
               </div>
 
               {shareUrl && <ShareLink shareUrl={shareUrl} />}
-              
               {shareUrl && <DownloadCounter count={downloadCount} />}
-              
               <FilePreview file={file} />
             </>
           )}
