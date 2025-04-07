@@ -101,8 +101,13 @@ const Index = () => {
       <div className="container mx-auto py-10 px-4">
         <div className="max-w-3xl mx-auto">
           <header className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              ⚡ Partage de Fichiers Instantané
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-4">
+              <img 
+                src="/insta-share_logo.png" 
+                alt="Insta Share Logo" 
+                className="w-16 h-16 object-contain -mr-2"
+              />
+              Partage de Fichiers Instantané
             </h1>
             <p className="text-gray-600">
               Partagez vos fichiers en direct • Le lien n'est actif que lorsque cette page est ouverte
