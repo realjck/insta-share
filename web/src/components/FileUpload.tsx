@@ -42,7 +42,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
   const handleFile = (file: File) => {
     // Accept all file types
     onFileSelected(file);
-    toast.success(`Fichier "${file.name}" téléchargé avec succès !`);
   };
 
   const triggerFileInput = () => {
