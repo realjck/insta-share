@@ -31,6 +31,13 @@ const Index = () => {
   
   // Modify handleFileUpload
   const handleFileUpload = async (selectedFile: File) => {
+      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB in bytes
+      
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast.error("Le fichier est trop volumineux (maximum 100 Mo)");
+        return;
+      }
+
       cleanupWebSocket();
       setUploadProgress(0);
       
@@ -175,8 +182,11 @@ const Index = () => {
                 {uploadProgress < 100 && (
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
                     <div 
-                      className="bg-orange-500 h-2.5 rounded-full transition-all duration-300" 
-                      style={{ width: `${uploadProgress}%` }}
+                      className="h-2.5 rounded-full transition-all duration-300" 
+                      style={{ 
+                        width: `${uploadProgress}%`,
+                        backgroundColor: '#eda417'
+                      }}
                     />
                   </div>
                 )}

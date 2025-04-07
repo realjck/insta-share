@@ -39,10 +39,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
     }
   };
 
-  const handleFile = (file: File) => {
-    // Accept all file types
-    onFileSelected(file);
-  };
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB in bytes
+
+    const handleFile = (file: File) => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("Le fichier est trop volumineux (maximum 100 Mo)");
+        return;
+      }
+      onFileSelected(file);
+    };
 
   const triggerFileInput = () => {
     if (fileInputRef.current) {
@@ -65,7 +70,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
             isDragging ? "text-brand-blue" : "text-gray-400"
           }`}
         />
-        <h3 className="text-lg font-medium mb-2">Téléchargez votre fichier</h3>
+        <h3 className="text-lg font-medium mb-2">Téléchargez votre fichier &lt; 100Mo</h3>
         <p className="text-sm text-gray-500 mb-4 text-center">
           Glissez et déposez votre fichier ici, ou cliquez pour sélectionner un fichier
         </p>
