@@ -76,7 +76,8 @@ const Index = () => {
         if (msg.type === "link") {
           setUploadProgress(100);
           currentCodeRef.current = msg.code;
-          const url = `${import.meta.env.VITE_APP_BASE_URL}/${msg.code}`;
+          const baseUrl = `${window.location.protocol}//${window.location.host}`;
+          const url = `${baseUrl}/${msg.code}`;
           setShareUrl(url);
           
           const pingInterval = setInterval(() => {
