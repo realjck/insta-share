@@ -78,7 +78,7 @@ async def index_handler(request):
 # Modify the app setup
 app = web.Application()
 app.add_routes([
-    web.get("/{code}", http_handler),
+    web.get("/{code:[A-Z]{4}}", http_handler),
     web.get("/", index_handler),
     web.static('/', 'web/dist')
 ])
