@@ -1,14 +1,13 @@
 import asyncio
-import websockets
 import json
 import random
 import string
-from aiohttp import web
+from aiohttp import web, WSMsgType
 import os
 from io import BytesIO
 import base64
 
-# Stockage : { "CODE": { "name": str, "data": BytesIO, "downloads": int, "host_ws": WebSocket } }
+# Storage
 files = {}
 connections = set()
 
@@ -18,92 +17,98 @@ def generate_code():
 # Configuration
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 
-async def ws_handler(websocket):  # Remove 'path' parameter
-    connections.add(websocket)
+async def ws_handler(ws):
+    connections.add(ws)
     code = None
     current_upload = None
 
     try:
-        async for message in websocket:
-            try:
-                data = json.loads(message)
-                
-                if data.get("action") == "upload_chunk":
-                    if current_upload is None:
-                        code = generate_code()
-                        current_upload = {
-                            "name": data["name"],
-                            "chunks": [None] * data["totalChunks"],
-                            "total_chunks": data["totalChunks"]
-                        }
+        async for msg in ws:
+            if msg.type == WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
                     
-                    chunk_index = data["chunkIndex"]
-                    current_upload["chunks"][chunk_index] = data["chunk"]
-                    
-                    if all(chunk is not None for chunk in current_upload["chunks"]):
-                        try:
-                            complete_data = b"".join([
-                                base64.b64decode(chunk + "=" * (-len(chunk) % 4))
-                                for chunk in current_upload["chunks"]
-                            ])
-                            
-                            if len(complete_data) > MAX_FILE_SIZE:
-                                await websocket.send(json.dumps({
-                                    "type": "error",
-                                    "message": "File too large"
-                                }))
-                                current_upload = None
-                                continue
-
-                            # Store in RAM instead of disk
-                            file_buffer = BytesIO(complete_data)
-                            
-                            files[code] = {
-                                "name": current_upload["name"],
-                                "data": file_buffer,
-                                "downloads": 0,
-                                "host_ws": websocket
+                    if data.get("action") == "upload_chunk":
+                        if current_upload is None:
+                            code = generate_code()
+                            current_upload = {
+                                "name": data["name"],
+                                "chunks": [None] * data["totalChunks"],
+                                "total_chunks": data["totalChunks"]
                             }
-                            
-                            await websocket.send(json.dumps({
-                                "type": "link",
-                                "code": code
-                            }))
-                            
-                            current_upload = None
-                            
-                        except Exception as e:
-                            print(f"Error processing complete file: {str(e)}")
-                            await websocket.send(json.dumps({
-                                "type": "error",
-                                "message": "Failed to process file"
-                            }))
-                            current_upload = None
+                        
+                        chunk_index = data["chunkIndex"]
+                        current_upload["chunks"][chunk_index] = data["chunk"]
+                        
+                        if all(chunk is not None for chunk in current_upload["chunks"]):
+                            try:
+                                complete_data = b"".join([
+                                    base64.b64decode(chunk + "=" * (-len(chunk) % 4))
+                                    for chunk in current_upload["chunks"]
+                                ])
+                                
+                                if len(complete_data) > MAX_FILE_SIZE:
+                                    await ws.send_json({
+                                        "type": "error",
+                                        "message": "File too large"
+                                    })
+                                    current_upload = None
+                                    continue
 
-            # Actualisation de l'UI
-                elif data.get("action") == "ping":
-                    if code in files:
-                        await websocket.send(json.dumps({
-                        "type": "stats",
-                        "downloads": files[code]["downloads"]
-                    }))
+                                file_buffer = BytesIO(complete_data)
+                                
+                                files[code] = {
+                                    "name": current_upload["name"],
+                                    "data": file_buffer,
+                                    "downloads": 0,
+                                    "host_ws": ws
+                                }
+                                
+                                await ws.send_json({
+                                    "type": "link",
+                                    "code": code
+                                })
+                                
+                                current_upload = None
+                                
+                            except Exception as e:
+                                print(f"Error processing complete file: {str(e)}")
+                                await ws.send_json({
+                                    "type": "error",
+                                    "message": "Failed to process file"
+                                })
+                                current_upload = None
 
-            except Exception as e:
-                print(f"Error processing message: {str(e)}")
-                await websocket.send(json.dumps({
-                    "type": "error",
-                    "message": f"Upload failed: {str(e)}"
-                }))
+                    elif data.get("action") == "ping":
+                        if code in files:
+                            await ws.send_json({
+                                "type": "stats",
+                                "downloads": files[code]["downloads"]
+                            })
 
-    except websockets.exceptions.ConnectionClosedError as e:
-        print(f"Connection closed: {str(e)}")
+                except Exception as e:
+                    print(f"Error processing message: {str(e)}")
+                    await ws.send_json({
+                        "type": "error",
+                        "message": f"Upload failed: {str(e)}"
+                    })
+            
+            elif msg.type == WSMsgType.ERROR:
+                print(f"WebSocket connection closed with exception {ws.exception()}")
+
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
     finally:
-        connections.discard(websocket)
+        connections.discard(ws)
         if code in files:
-            files[code]["data"].close()  # Clean up BytesIO
+            files[code]["data"].close()
             del files[code]
+
+async def websocket_handler(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    await ws_handler(ws)
+    return ws
 
 async def http_handler(request):
     code = request.match_info.get("code")
@@ -113,10 +118,10 @@ async def http_handler(request):
         # Notify host about download
         for ws in connections:
             if ws == files[code]["host_ws"]:
-                await ws.send(json.dumps({
+                await ws.send_json({
                     "type": "stats",
                     "downloads": files[code]["downloads"]
-                }))
+                })
         
         file = files[code]
         file["data"].seek(0)  # Reset buffer position to start
@@ -141,6 +146,7 @@ app = web.Application()
 app.add_routes([
     web.get("/{code:[A-Z]{4}}", http_handler),
     web.get("/", index_handler),
+    web.get("/ws", websocket_handler),  # Nouveau endpoint WebSocket
     web.static('/', 'web/dist')
 ])
 
@@ -148,8 +154,7 @@ async def main():
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", 8080).start()
-    async with websockets.serve(ws_handler, "0.0.0.0", 8765, ping_interval=None):  # Add ping_interval=None
-        print("Serveur prêt : http://localhost:8080/")
-        await asyncio.Future()
+    print("Serveur prêt : http://localhost:8080/")
+    await asyncio.Future()
 
 asyncio.run(main())

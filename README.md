@@ -44,10 +44,9 @@ cd ..
 docker build -t insta-share .
 
 # Run the container
-docker run -d --restart always -p 8080:8080 -p 8765:8765 --name insta-share insta-share
+docker run -d --restart always -p 8080:8080 --name insta-share insta-share
 ```
 
 ### Ports
 
-- 8080: HTTP server
-- 8765: WebSocket server
+- 8080: HTTP server and WebSocket server

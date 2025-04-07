@@ -13,8 +13,8 @@ ENV WEBSOCKET_PORT=8765
 COPY web/dist ./web/dist
 COPY server.py .
 
-# Expose required ports
-EXPOSE 8080 8765
+# Expose only HTTP port
+EXPOSE 8080
 
 # Run the server
 CMD ["python", "server.py"]
