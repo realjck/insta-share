@@ -44,7 +44,7 @@ cd ..
 docker build -t insta-share .
 
 # Run the container
-docker run -d --restart always -p 8080:8080 --name insta-share insta-share
+docker run -d --restart always -p 8080:8080 -m 512m --name insta-share insta-share
 ```
 
 ### Ports
