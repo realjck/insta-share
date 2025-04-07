@@ -17,10 +17,6 @@ def generate_code():
 
 # Configuration
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
-UPLOAD_DIR = "uploads"
-
-# Ensure upload directory exists
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 async def ws_handler(websocket):  # Remove 'path' parameter
     connections.add(websocket)
