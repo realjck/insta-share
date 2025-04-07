@@ -4,6 +4,7 @@ import json
 import random
 import string
 from aiohttp import web
+import os
 
 # Stockage : { "CODE": { "name": str, "data": str, "downloads": int, "host_ws": WebSocket } }
 files = {}
@@ -70,15 +71,24 @@ async def http_handler(request):
         )
     return web.Response(text="Fichier expiré", status=410)
 
+# Add static route handler
+async def index_handler(request):
+    return web.FileResponse('web/dist/index.html')
+
+# Modify the app setup
 app = web.Application()
-app.add_routes([web.get("/{code}", http_handler)])
+app.add_routes([
+    web.get("/{code}", http_handler),
+    web.get("/", index_handler),
+    web.static('/', 'web/dist')
+])
 
 async def main():
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", 8080).start()
     async with websockets.serve(ws_handler, "0.0.0.0", 8765):
-        print("Serveur prêt : http://localhost:8080/ABCD")
+        print("Serveur prêt : http://localhost:8080/")
         await asyncio.Future()
 
 asyncio.run(main())
