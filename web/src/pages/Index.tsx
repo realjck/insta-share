@@ -50,7 +50,7 @@ const Index = () => {
       
       if (msg.type === "link") {
         currentCodeRef.current = msg.code;
-        const url = `insta.pxly.fr/${msg.code}`;
+        const url = `${import.meta.env.VITE_APP_BASE_URL}/${msg.code}`;
         setShareUrl(url);
         
         // Set up ping interval

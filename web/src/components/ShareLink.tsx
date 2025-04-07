@@ -19,7 +19,7 @@ const ShareLink: React.FC<ShareLinkProps> = ({ shareUrl }) => {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(`https://${shareUrl}`);
       setCopied(true);
       toast.success("Lien copié dans le presse-papier !");
       
@@ -42,8 +42,8 @@ const ShareLink: React.FC<ShareLinkProps> = ({ shareUrl }) => {
           <span>Lien de partage:</span>
         </div>
         <div className="flex-1 min-w-0 flex items-center space-x-2 w-full">
-          <span className="bg-black text-white text-xl hidden sm:inline font-bold py-3 px-6 rounded-xl border-2 border-white shadow-lg">
-            insta.pxly.fr/{shortCode}
+          <span className="bg-black text-white text-xl font-bold py-3 px-6 rounded-xl border-2 border-white shadow-lg">
+            {shareUrl}
           </span>
         </div>
         <Button
