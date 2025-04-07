@@ -22,13 +22,7 @@ Auto-deletes when host closes the page
 
 ## Installation
 
-### 1. Configure your deployment url:
-Modify .env file in the web directory:
-
-```
-VITE_APP_BASE_URL=http://your-site
-```
-### 2. Build the frontend:
+### 1. Build the frontend:
 
 ```bash
 cd web
@@ -37,7 +31,7 @@ npm run build
 cd ..
 ```
 
-### 3. Deploy with Docker
+### 2. Deploy with Docker
 
 ```bash
 # Build the Docker image
