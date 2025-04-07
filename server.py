@@ -5,10 +5,12 @@ import random
 import string
 from aiohttp import web
 import os
+from io import BytesIO
+import base64
 
-# Stockage : { "CODE": { "name": str, "data": str, "downloads": int, "host_ws": WebSocket } }
+# Stockage : { "CODE": { "name": str, "data": BytesIO, "downloads": int, "host_ws": WebSocket } }
 files = {}
-connections = set()  # Toutes les connexions WebSocket
+connections = set()
 
 def generate_code():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
@@ -23,7 +25,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 async def ws_handler(websocket, path):
     connections.add(websocket)
     code = None
-    file_path = None
     current_upload = None
 
     try:
@@ -34,7 +35,6 @@ async def ws_handler(websocket, path):
                 if data.get("action") == "upload_chunk":
                     if current_upload is None:
                         code = generate_code()
-                        file_path = os.path.join(UPLOAD_DIR, code)
                         current_upload = {
                             "name": data["name"],
                             "chunks": [None] * data["totalChunks"],
@@ -45,7 +45,6 @@ async def ws_handler(websocket, path):
                     current_upload["chunks"][chunk_index] = data["chunk"]
                     
                     if all(chunk is not None for chunk in current_upload["chunks"]):
-                        import base64
                         try:
                             complete_data = b"".join([
                                 base64.b64decode(chunk + "=" * (-len(chunk) % 4))
@@ -60,12 +59,12 @@ async def ws_handler(websocket, path):
                                 current_upload = None
                                 continue
 
-                            with open(file_path, "wb") as f:
-                                f.write(complete_data)
+                            # Store in RAM instead of disk
+                            file_buffer = BytesIO(complete_data)
                             
                             files[code] = {
                                 "name": current_upload["name"],
-                                "path": file_path,
+                                "data": file_buffer,
                                 "downloads": 0,
                                 "host_ws": websocket
                             }
@@ -107,8 +106,7 @@ async def ws_handler(websocket, path):
     finally:
         connections.discard(websocket)
         if code in files:
-            if file_path and os.path.exists(file_path):
-                os.remove(file_path)  # Nettoyer le fichier
+            files[code]["data"].close()  # Clean up BytesIO
             del files[code]
 
 async def http_handler(request):
@@ -116,7 +114,7 @@ async def http_handler(request):
     if code in files:
         files[code]["downloads"] += 1
         
-        # Notifier l'hôte
+        # Notify host about download
         for ws in connections:
             if ws == files[code]["host_ws"]:
                 await ws.send(json.dumps({
@@ -125,13 +123,18 @@ async def http_handler(request):
                 }))
         
         file = files[code]
-        return web.FileResponse(
-            file["path"],
+        file["data"].seek(0)  # Reset buffer position to start
+        
+        response = web.StreamResponse(
             headers={
                 "Content-Disposition": f'attachment; filename="{file["name"]}"'
             }
         )
-    return web.Response(text="Fichier expiré", status=410)
+        await response.prepare(request)
+        await response.write(file["data"].getvalue())
+        return response
+        
+    return web.Response(text="File expired", status=410)
 
 # Add static route handler
 async def index_handler(request):
