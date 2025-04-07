@@ -22,7 +22,7 @@ UPLOAD_DIR = "uploads"
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-async def ws_handler(websocket, path):
+async def ws_handler(websocket):  # Remove 'path' parameter
     connections.add(websocket)
     code = None
     current_upload = None
@@ -152,7 +152,7 @@ async def main():
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", 8080).start()
-    async with websockets.serve(ws_handler, "0.0.0.0", 8765):
+    async with websockets.serve(ws_handler, "0.0.0.0", 8765, ping_interval=None):  # Add ping_interval=None
         print("Serveur prêt : http://localhost:8080/")
         await asyncio.Future()
 

@@ -14,20 +14,40 @@ Auto-deletes when host closes the page
 
 ![screenshots](./media/screenshots.png)
 
-Preview version:
-
-```bash
-Copy
-pip install websockets aiohttp
-python server.py  # Starts at http://localhost:8080
-```
-
-Open `index.html` to share files.
-
 ### Key Features
 
 - ⚡ WebSocket real-time (No storage, RAM only)
 - 🔢 4-letter links
 - 📊 Live download counter
 
-(Single-file server under 100 lines)
+## Installation
+
+### 1. Configure your deployment url:
+Modify .env file in the web directory:
+
+```
+VITE_APP_BASE_URL=http://your-site
+```
+### 2. Build the frontend:
+
+```bash
+cd web
+npm install
+npm run build
+cd ..
+```
+
+### 3. Deploy with Docker
+
+```bash
+# Build the Docker image
+docker build -t insta-share .
+
+# Run the container
+docker run -d --restart always -p 8080:8080 -p 8765:8765 --name insta-share insta-share
+```
+
+### Ports
+
+- 8080: HTTP server
+- 8765: WebSocket server
