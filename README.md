@@ -18,6 +18,7 @@ Auto-deletes when host closes the page
 
 - ⚡ WebSocket real-time (No storage, RAM only)
 - 🔢 4-letter links
+- 📱 QR code generation for easy mobile sharing
 - 📊 Live download counter
 
 ## Installation
